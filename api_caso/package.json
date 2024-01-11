@@ -1,0 +1,21 @@
+{
+  "name": "api_login",
+  "version": "1.0.0",
+  "description": "api rest login y registro",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js"
+  },
+  "keywords": [
+    "apirest"
+  ],
+  "author": "Jean Carlos",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^8.0.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

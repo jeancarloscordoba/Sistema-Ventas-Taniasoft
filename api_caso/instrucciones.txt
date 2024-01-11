@@ -1,0 +1,2 @@
+ejecutar comando npi install
+ejecutar comando npm run dev
