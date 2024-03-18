@@ -52,7 +52,8 @@ public class ProductoDAO {
         return r;
     }
     
-    //************ Operaciones CRUD ***************//
+    /************ Operaciones CRUD ***************/
+    /*
     public List listar(){
         String sql="select * from producto";
         List<Producto> lista=new ArrayList<>();
@@ -137,16 +138,32 @@ public class ProductoDAO {
         } catch (Exception p) {
         } 
     }
+    */
     
-    public boolean guardarProducto(Producto producto){
-        return PersistanceController.guardar(producto);
-    }
     
-    public List<Producto> getListaProductos(){
+    //Listar Producto
+    public List<Producto> getListaProductos() {
         return PersistanceController.buscarPorClase(Producto.class);
     }
-    
-    public Producto getProductoPorId(int idproducto){
-        return (Producto)PersistanceController.buscarPorId(Producto.class, idproducto);
+
+    //Guardar Producto 
+    public boolean guardarProducto(Producto producto) {
+        return PersistanceController.guardar(producto);
     }
+
+    //Editar Producto
+    public Producto getEditarProducto(int idProducto) {
+        return (Producto) PersistanceController.buscarPorId(Producto.class, idProducto);
+    }
+
+    //Actualizar Producto
+    public boolean actualizarProducto(Producto producto) { 
+        return PersistanceController.actualizar(producto);
+    }
+   
+    //Eliminar Producto 
+    public boolean eliminarProducto(int idProducto) {
+        return PersistanceController.<Producto>eliminarPorId(idProducto, Producto.class);
+    }
+    
 }

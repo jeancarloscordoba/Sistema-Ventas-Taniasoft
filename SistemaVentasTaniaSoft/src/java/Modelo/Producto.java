@@ -19,6 +19,7 @@ public class Producto implements Serializable { //Esta clase producto se utiliza
     int id; //Este es la variable para el id de la tabla productos en el BD. 
     @Column(name="Nombres")
     String nom;
+    //@Digits(integer = 10, fraction = 0)
     @Column(name="Precio")
     Integer precio; 
     @Column(name="Stock")

@@ -64,71 +64,281 @@ public class Controlador extends HttpServlet {
         //MENU EMPLEADOS
         if (menu.equals("Empleado")) {
             switch (accion) {
-
+                //Caso para la funcionalidad de listar, del menu Empleado
                 case "Listar":
-                    //List lista = edao.listar(); 
                     List lista = edao.getListaEmpleados();
 
                     request.setAttribute("empleados", lista); //Aquí se esta definiendo empleados como un atributo del arrays lista. 
                     break;
 
-                case "Agregar":
+                //Acción del boton Editar para editar un Empleado
+                case "Editar":
+                    // Se le asigan el parametro de id (IdEmpleado) a la variable "ide"
+                    ide = Integer.parseInt(request.getParameter("id"));
+
+                    // Se le asigna la acción del método "getEditarEmpleado" a la variable e de tipo "Empleado"
+                    Empleado e = edao.getEditarEmpleado(ide);
+
+                    // Se establece el parámetro editarEmpleado en true para indicar que se está editando un empleado
+                    request.setAttribute("editarEmpleado", true);
+
+                    // Se envían los datos del empleado al JSP
+                    request.setAttribute("empleado", e);
+
+                    // Se recarga la página con la acción de "Listar".
+                    request.getRequestDispatcher("Controlador?menu=Empleado&accion=Listar").forward(request, response);
+                    break;
+
+                // Acción del botón Guardar para guardar un Empleado
+                case "Guardar":
+                    // Se encapsulan en variables los datos del empleado agregados en los name de cada dato.
                     String dni = request.getParameter("txtDni");
                     String nom = request.getParameter("txtNombres");
                     String tel = request.getParameter("txtTel");
                     String est = request.getParameter("txtEstado");
                     String user = request.getParameter("txtUser");
 
+                    // Se le asigan al objeto em (Empleado) los datos ingresados por el usuario
                     em.setDni(dni);
                     em.setNom(nom);
                     em.setTel(tel);
                     em.setEstado(est);
                     em.setUser(user);
 
-                    //edao.agregar(em);
+                    // Validar si hay campos vacíos antes de guardar.
+                    if (dni.isEmpty() || nom.isEmpty() || tel.isEmpty() || est.isEmpty() || user.isEmpty()) {
+                        // Si hay campos vacíos, mostrar un mensaje de error al usuario.
+                        request.setAttribute("mensajeError", "ERROR, Se deben diligenciar todos los datos del Empleado para guardarlo.");
+
+                        // Se guarda el objeto em (Empleado) en el atributo "empleados" para mantener los datos ingreados en el formulario si hay un error
+                        request.setAttribute("empleado", em);
+
+                        // Se recarga la página con la acción de "Listar".
+                        request.getRequestDispatcher("Controlador?menu=Empleado&accion=Listar").forward(request, response);
+                        return;
+                    }
+
+                    // Validar el DNI ingresado
+                    if (dni.length() > 10) {
+                        // Si el DNI tiene más de 10 dígitos, mostrar un mensaje de error en el campo de DNI
+                        request.setAttribute("mensajeErrorDni", "ERROR en el DNI. (menor a 11 digitos) ");
+
+                        // Mensaje de error en la interfaz por DNI erróneo
+                        request.setAttribute("mensajeError", "DNI erróneo. Por favor ingrese un DNI válido.");
+
+                        // Se guarda el objeto em (Empleado) en el atributo "empleado" para mantener los datos ingreados en el formulario si hay un error
+                        request.setAttribute("empleado", em);
+
+                        // Se recarga la página con la acción de "Listar".
+                        request.getRequestDispatcher("Controlador?menu=Empleado&accion=Listar").forward(request, response);
+                        return;
+                    }
+
+                    // Validar el teléfono ingresado
+                    if (tel.length() > 15) {
+                        // Mensaje error para el campo de teléfono
+                        request.setAttribute("mensajeErrorTelefono", "Hay un ERROR en el Teléfono. (menor a 16 digitos)");
+
+                        // Mensaje de error en la interfaz por teléfono erróneo
+                        request.setAttribute("mensajeError", "Teléfono erróneo. Por favor ingrese un teléfono válido.");
+
+                        // Se guarda el objeto em (Empleado) en el atributo "empleado" para mantener los datos ingreados en el formulario si hay un error
+                        request.setAttribute("empleado", em);
+
+                        // Se recarga la página con la acción de "Listar".
+                        request.getRequestDispatcher("Controlador?menu=Empleado&accion=Listar").forward(request, response);
+                        return;
+                    }
+
+                    // Validar el estado ingresado
+                    if (!est.equals("1") && !est.equals("2")) {
+                        // Si el estado no es 1 ni 2, se muestra un mensaje de error en el campo de estado
+                        request.setAttribute("mensajeErrorEstado", "Hay un ERROR en el Estado");
+
+                        // Mensaje de error en la interfaz por Estado erróneo
+                        request.setAttribute("mensajeError", "El estado debe ser 1 (Empleado activo) o 2 (Empleado inactivo).");
+
+                        // Se guarda el objeto em (Empleado) en el atributo "empleado" para mantener los datos ingreados en el formulario si hay un error
+                        request.setAttribute("empleado", em);
+
+                        // Se recarga la página con la acción de "Listar".
+                        request.getRequestDispatcher("Controlador?menu=Empleado&accion=Listar").forward(request, response);
+                        return;
+                    }
+
+                    // Si no hay errores, se procede a guardar el cliente
                     edao.guardarEmpleado(em);
 
+                    // Si se guarda el Empleado de forma correcta se envía un mensaje de éxito.
+                    request.setAttribute("mensajeCorrecto", "¡Se ha GUARDADO el Empleado con éxito!");
+
+                    // Se recarga la página con la acción de "Listar".
                     request.getRequestDispatcher("Controlador?menu=Empleado&accion=Listar").forward(request, response);
                     break;
 
-                case "Editar":
-                    ide = Integer.parseInt(request.getParameter("id"));
-
-                    //Empleado e = edao.listarId(ide); 
-                    Empleado e = edao.getEditarEmpleado(ide);
-
-                    request.setAttribute("empleado", e);
-                    request.getRequestDispatcher("Controlador?menu=Empleado&accion=Listar").forward(request, response);
-                    break;
-
-                case "Actualizar":
+                case "cancelarGuardado":
+                    // Se atrapan los campos del formulario en varibales
                     String dni1 = request.getParameter("txtDni");
                     String nom1 = request.getParameter("txtNombres");
                     String tel1 = request.getParameter("txtTel");
                     String est1 = request.getParameter("txtEstado");
                     String user1 = request.getParameter("txtUser");
 
-                    em.setDni(dni1);
-                    em.setNom(nom1);
-                    em.setTel(tel1);
-                    em.setEstado(est1);
-                    em.setUser(user1);
-                    em.setId(ide);
+                    // Se verifica si los campos del formulario están vacíos
+                    if (dni1.isEmpty() && nom1.isEmpty() && tel1.isEmpty() && est1.isEmpty() && user1.isEmpty()) {
+                        //En caso que los campos esten vacios se arroja un mensaje
+                        request.setAttribute("mensajeCancelar", "¡Inicia a llenar los datos del Empleado para cancelar el guardado!");
+                    } else {
+                        // Se crea una varibale para que almacene una lista vacia
+                        List<Empleado> empleadoVacioParaGuardado = new ArrayList<>();
 
-                    System.out.println("EMPLEADO ACTUALIZADO: " + em);
+                        // Se le asigna la lista vacía al atributo "empleados".
+                        request.setAttribute("empleados", empleadoVacioParaGuardado);
 
-                    //edao.actualizar(em);
-                    edao.actualizarEmpleado(em);
+                        // Mensaje de exito al cancelar una edición 
+                        request.setAttribute("mensajeCancelar", "¡Se CANCELO el guardado del Empleado!");
+                    }
 
+                    // Se recarga la pagina con la acción de "Listar".
                     request.getRequestDispatcher("Controlador?menu=Empleado&accion=Listar").forward(request, response);
                     break;
 
+                //Acción del boton Actualizar para actualizar un Cliente
+                case "Actualizar":
+                    String dni2 = request.getParameter("txtDni");
+                    String nom2 = request.getParameter("txtNombres");
+                    String tel2 = request.getParameter("txtTel");
+                    String est2 = request.getParameter("txtEstado");
+                    String user2 = request.getParameter("txtUser");
+
+                    // Se le asigan al objeto em (Empleado) los datos ingresados por el usuario
+                    em.setDni(dni2);
+                    em.setNom(nom2);
+                    em.setTel(tel2);
+                    em.setEstado(est2);
+                    em.setUser(user2);
+                    em.setId(ide);
+
+                    // Validar si hay campos vacíos antes de guardar.
+                    if (dni2.isEmpty() || nom2.isEmpty() || tel2.isEmpty() || est2.isEmpty() || user2.isEmpty()) {
+                        // Si hay campos vacíos, mostrar un mensaje de error al usuario.
+                        request.setAttribute("mensajeError", "ERROR, Se deben diligenciar todos los datos del Empleado para guardarlo.");
+
+                        // Se guarda el objeto em (Empleado) en el atributo "empleados" para mantener los datos ingreados en el formulario si hay un error
+                        request.setAttribute("empleado", em);
+
+                        // Se establece el parámetro editarEmpleado en true para indicar que se está editando un empleado
+                        request.setAttribute("editarEmpleado", true);
+
+                        // Se recarga la página con la acción de "Listar".
+                        request.getRequestDispatcher("Controlador?menu=Empleado&accion=Listar").forward(request, response);
+                        return;
+                    }
+
+                    // Validar el DNI ingresado
+                    if (dni2.length() > 10) {
+                        // Si el DNI tiene más de 10 dígitos, mostrar un mensaje de error en el campo de DNI
+                        request.setAttribute("mensajeErrorDni", "ERROR en el DNI. (menor a 11 digitos) ");
+
+                        // Mensaje de error en la interfaz por DNI erróneo
+                        request.setAttribute("mensajeError", "DNI erróneo. Por favor ingrese un DNI válido.");
+
+                        // Se guarda el objeto em (Empleado) en el atributo "empleado" para mantener los datos ingreados en el formulario si hay un error
+                        request.setAttribute("empleado", em);
+
+                        // Se establece el parámetro editarEmpleado en true para indicar que se está editando un empleado
+                        request.setAttribute("editarEmpleado", true);
+
+                        // Se recarga la página con la acción de "Listar".
+                        request.getRequestDispatcher("Controlador?menu=Empleado&accion=Listar").forward(request, response);
+                        return;
+                    }
+
+                    // Validar el teléfono ingresado
+                    if (tel2.length() > 15) {
+                        // Mensaje error para el campo de teléfono
+                        request.setAttribute("mensajeErrorTelefono", "Hay un ERROR en el Teléfono. (menor a 16 digitos)");
+
+                        // Mensaje de error en la interfaz por teléfono erróneo
+                        request.setAttribute("mensajeError", "Teléfono erróneo. Por favor ingrese un teléfono válido.");
+
+                        // Se guarda el objeto em (Empleado) en el atributo "empleado" para mantener los datos ingreados en el formulario si hay un error
+                        request.setAttribute("empleado", em);
+
+                        // Se establece el parámetro editarEmpleado en true para indicar que se está editando un empleado
+                        request.setAttribute("editarEmpleado", true);
+
+                        // Se recarga la página con la acción de "Listar".
+                        request.getRequestDispatcher("Controlador?menu=Empleado&accion=Listar").forward(request, response);
+                        return;
+                    }
+
+                    // Validar el estado ingresado
+                    if (!est2.equals("1") && !est2.equals("2")) {
+                        // Si el estado no es 1 ni 2, se muestra un mensaje de error en el campo de estado
+                        request.setAttribute("mensajeErrorEstado", "Hay un ERROR en el Estado");
+
+                        // Mensaje de error en la interfaz por Estado erróneo
+                        request.setAttribute("mensajeError", "El estado debe ser 1 (Empleado activo) o 2 (Empleado inactivo).");
+
+                        // Se guarda el objeto em (Empleado) en el atributo "empleado" para mantener los datos ingreados en el formulario si hay un error
+                        request.setAttribute("empleado", em);
+
+                        // Se establece el parámetro editarEmpleado en true para indicar que se está editando un empleado
+                        request.setAttribute("editarEmpleado", true);
+
+                        // Se recarga la página con la acción de "Listar".
+                        request.getRequestDispatcher("Controlador?menu=Empleado&accion=Listar").forward(request, response);
+                        return;
+                    }
+
+                    // Si no hay errores, se procede a actualizar el empleado
+                    if (request.getAttribute("mensajeError") == null) {
+                        //Se actualiza el Empleado con el metodo actualizarEmpleado
+                        edao.actualizarEmpleado(em);
+
+                        // Se ejecuta el mensaje con exito 
+                        request.setAttribute("mensajeCorrecto", "¡Se ha ACTUALIZADO el Empleado con éxito!");
+
+                        // Actualización exitosa, redireccionar a la página de listado de Empleados
+                        request.getRequestDispatcher("Controlador?menu=Empleado&accion=Listar").forward(request, response);
+                        return; //Se retorna para salir del metodo de actualizar 
+                    }
+
+                    // Se recarga la pagina con la acción de "Listar".
+                    request.getRequestDispatcher("Controlador?menu=Empleado&accion=Listar").forward(request, response);
+                    break;
+
+                //Acción de Cancelar para el boton de cancelar edición. 
+                case "cancelarEdicion":
+                    // Se crea una varibale para que almacene una lista vacia
+                    List<Empleado> empleadoeVacioParaEdicion = new ArrayList<>();
+
+                    // Se le asigna la lista vacía al atributo "empleados".
+                    request.setAttribute("empleados", empleadoeVacioParaEdicion);
+
+                    // Mensaje de exito al cancelar una edición 
+                    request.setAttribute("mensajeCancelar", "¡Se CANCELO la edicion del Empleado!");
+
+                    // Se recarga la pagina con la acción de "Listar".
+                    request.getRequestDispatcher("Controlador?menu=Empleado&accion=Listar").forward(request, response);
+                    break;
+
+                //Acción del boton Eliminar para eliminar un Empleado
                 case "Delete":
+                    // Se le asigna el parámetro id (IdEmpleado) a la variable "ide".
                     ide = Integer.parseInt(request.getParameter("id"));
 
-                    //edao.delete(ide);
-                    edao.eliminarEmpleado(ide);
+                    // Se intenta eliminar el Empleado y se verifica si se realizó con éxito.
+                    if (edao.eliminarEmpleado(ide)) {
+                        // Si se elimina correctamente, se muestra un mensaje de éxito.
+                        request.setAttribute("mensajeCorrecto", "¡Se ha ELIMINADO el Empleado con éxito!");
+                    } else {
+                        // Si hay algún error al eliminar, se muestra un mensaje de error.
+                        request.setAttribute("mensajeError", "ERROR, no es posible eliminar el Empleado");
+                    }
 
+                    // Se recarga la página con la acción de "Listar".
                     request.getRequestDispatcher("Controlador?menu=Empleado&accion=Listar").forward(request, response);
                     break;
 
@@ -143,7 +353,7 @@ public class Controlador extends HttpServlet {
             switch (accion) {
                 //Acción de Listar para listar la lista de clientes
                 case "Listar":
-                    List lista = cdao.getListaClientes();//cdao.listar();
+                    List lista = cdao.getListaClientes();
 
                     request.setAttribute("clientes", lista); //Aquí se esta definiendo clientes como un atributo del arrays lista. 
                     break;
@@ -154,7 +364,7 @@ public class Controlador extends HttpServlet {
                     idc = Integer.parseInt(request.getParameter("id"));
 
                     // Se le asigna la acción del método "getEditarCliente" a la variable c de tipo "Cliente"
-                    Cliente c = cdao.getEditarCliente(idc);//cdao.listarId(idc);
+                    Cliente c = cdao.getEditarCliente(idc);
 
                     // Se establece el parámetro editarCliente en true para indicar que se está editando un cliente
                     request.setAttribute("editarCliente", true);
@@ -198,7 +408,7 @@ public class Controlador extends HttpServlet {
                     // Validar el DNI ingresado
                     if (dni.length() > 10) {
                         // Si el DNI tiene más de 10 dígitos, mostrar un mensaje de error en el campo de DNI
-                        request.setAttribute("mensajeErrorDni", "ERROR en el DNI. (menor a 10 digitos) ");
+                        request.setAttribute("mensajeErrorDni", "ERROR en el DNI. (menor a 11 digitos) ");
 
                         // Mensaje de error en la interfaz por DNI erróneo
                         request.setAttribute("mensajeError", "DNI erróneo. Por favor ingrese un DNI válido.");
@@ -214,7 +424,7 @@ public class Controlador extends HttpServlet {
                     // Validar el teléfono ingresado
                     if (tel.length() > 15) {
                         // Mensaje error para el campo de teléfono
-                        request.setAttribute("mensajeErrorTelefono", "Hay un ERROR en el Teléfono. (menor a 15 digitos)");
+                        request.setAttribute("mensajeErrorTelefono", "Hay un ERROR en el Teléfono. (menor a 16 digitos)");
 
                         // Mensaje de error en la interfaz por teléfono erróneo
                         request.setAttribute("mensajeError", "Teléfono erróneo. Por favor ingrese un teléfono válido.");
@@ -247,7 +457,7 @@ public class Controlador extends HttpServlet {
                     cdao.guardarCliente(cl);
 
                     // Si se guarda el Cliente de forma correcta se envía un mensaje de éxito.
-                    request.setAttribute("mensajeCorrecto", "¡Se ha guardado el Cliente con éxito!");
+                    request.setAttribute("mensajeCorrecto", "¡Se ha GUARDADO el Cliente con éxito!");
 
                     // Se recarga la página con la acción de "Listar".
                     request.getRequestDispatcher("Controlador?menu=Cliente&accion=Listar").forward(request, response);
@@ -255,25 +465,25 @@ public class Controlador extends HttpServlet {
 
                 case "cancelarGuardado":
                     // Se atrapan los campos del formulario en varibales
-                    String dni3 = request.getParameter("txtDni");
-                    String nom3 = request.getParameter("txtNombres");
-                    String tel3 = request.getParameter("txtTel");
-                    String dir3 = request.getParameter("txtDir");
-                    String est3 = request.getParameter("txtEstado");
+                    String dni1 = request.getParameter("txtDni");
+                    String nom1 = request.getParameter("txtNombres");
+                    String tel1 = request.getParameter("txtTel");
+                    String dir1 = request.getParameter("txtDir");
+                    String est1 = request.getParameter("txtEstado");
 
                     // Se verifica si los campos del formulario están vacíos
-                    if (dni3.isEmpty() && nom3.isEmpty() && tel3.isEmpty() && dir3.isEmpty() && est3.isEmpty()) {
+                    if (dni1.isEmpty() && nom1.isEmpty() && tel1.isEmpty() && dir1.isEmpty() && est1.isEmpty()) {
                         //En caso que los campos esten vacios de arroja un mensaje
                         request.setAttribute("mensajeCancelar", "¡Inicia a llenar los datos del cliente para cancelar el guardado!");
                     } else {
                         // Se crea una varibale para que almacene una lista vacia
                         List<Cliente> clienteVacioParaGuardado = new ArrayList<>();
-                        
+
                         // Se le asigna la lista vacía al atributo "clientes".
                         request.setAttribute("clientes", clienteVacioParaGuardado);
 
                         // Mensaje de exito al cancelar una edición 
-                        request.setAttribute("mensajeCancelar", "¡Se cancelo el guardado del cliente!");
+                        request.setAttribute("mensajeCancelar", "¡Se CANCELO el guardado del Cliente!");
                     }
 
                     // Se recarga la pagina con la acción de "Listar".
@@ -282,22 +492,22 @@ public class Controlador extends HttpServlet {
 
                 //Acción del boton Actualizar para actualizar un Cliente
                 case "Actualizar":
-                    String dni1 = request.getParameter("txtDni");
-                    String nom1 = request.getParameter("txtNombres");
-                    String tel1 = request.getParameter("txtTel");
-                    String dir1 = request.getParameter("txtDir");
-                    String est1 = request.getParameter("txtEstado");
+                    String dni2 = request.getParameter("txtDni");
+                    String nom2 = request.getParameter("txtNombres");
+                    String tel2 = request.getParameter("txtTel");
+                    String dir2 = request.getParameter("txtDir");
+                    String est2 = request.getParameter("txtEstado");
 
                     // Se le asigan al objeto cl (Cliente) los datos ingresados por el usuario
-                    cl.setDni(dni1);
-                    cl.setNom(nom1);
-                    cl.setTel(tel1);
-                    cl.setDir(dir1);
-                    cl.setEstado(est1);
+                    cl.setDni(dni2);
+                    cl.setNom(nom2);
+                    cl.setTel(tel2);
+                    cl.setDir(dir2);
+                    cl.setEstado(est2);
                     cl.setId(idc);
 
                     // Validar si hay campos vacíos.
-                    if (dni1.isEmpty() || nom1.isEmpty() || tel1.isEmpty() || dir1.isEmpty() || est1.isEmpty()) {
+                    if (dni2.isEmpty() || nom2.isEmpty() || tel2.isEmpty() || dir2.isEmpty() || est2.isEmpty()) {
                         // Si hay campos vacios, se muestra un mensaje de error al usuario.
                         request.setAttribute("mensajeError", "ERROR, Se debe llenar todos los campos para actualizar un cliente.");
 
@@ -313,7 +523,7 @@ public class Controlador extends HttpServlet {
                     }
 
                     // Validar el DNI ingresado
-                    if (dni1.length() > 10) {
+                    if (dni2.length() > 10) {
                         // Si el DNI tiene más de 10 dígitos, mostrar un mensaje de error en el campo de DNI
                         request.setAttribute("mensajeErrorDni", "ERROR en el DNI. (menor a 10 digitos)");
 
@@ -332,7 +542,7 @@ public class Controlador extends HttpServlet {
                     }
 
                     // Validar el telefono ingresado
-                    if (tel1.length() > 15) {
+                    if (tel2.length() > 15) {
                         // Mensaje error para el campo de teléfono
                         request.setAttribute("mensajeErrorTelefono", "Hay un ERROR en el Teléfono");
 
@@ -351,7 +561,7 @@ public class Controlador extends HttpServlet {
                     }
 
                     // Validar el estado ingresado
-                    if (!est1.equals("1") && !est1.equals("2")) {
+                    if (!est2.equals("1") && !est2.equals("2")) {
                         // Si el estado no es 1 ni 2, se muestra un mensaje de error en el campo de estado
                         request.setAttribute("mensajeErrorEstado", "Hay un ERROR en el Estado");
 
@@ -375,7 +585,7 @@ public class Controlador extends HttpServlet {
                         cdao.actualizarCliente(cl);
 
                         // Se ejecuta el mensaje exito 
-                        request.setAttribute("mensajeCorrecto", "¡Se ha actualizado el Cliente con éxito!");
+                        request.setAttribute("mensajeCorrecto", "¡Se ha ACTUALIZADO el Cliente con éxito!");
 
                         // Actualización exitosa, redireccionar a la página de listado de clientes
                         request.getRequestDispatcher("Controlador?menu=Cliente&accion=Listar").forward(request, response);
@@ -395,7 +605,7 @@ public class Controlador extends HttpServlet {
                     request.setAttribute("clientes", clienteVacioParaEdicion);
 
                     // Mensaje de exito al cancelar una edición 
-                    request.setAttribute("mensajeCancelar", "¡Se cancelo la edicion del cliente!");
+                    request.setAttribute("mensajeCancelar", "¡Se CANCELO la edicion del Cliente!");
 
                     // Se recarga la pagina con la acción de "Listar".
                     request.getRequestDispatcher("Controlador?menu=Cliente&accion=Listar").forward(request, response);
@@ -409,7 +619,7 @@ public class Controlador extends HttpServlet {
                     // Se intenta eliminar el cliente y se verifica si se realizó con éxito.
                     if (cdao.eliminarCliente(idc)) {
                         // Si se elimina correctamente, se muestra un mensaje de éxito.
-                        request.setAttribute("mensajeCorrecto", "¡Se ha eliminado el Cliente con éxito!");
+                        request.setAttribute("mensajeCorrecto", "¡Se ha ELIMINADO el Cliente con éxito!");
                     } else {
                         // Si hay algún error al eliminar, se muestra un mensaje de error.
                         request.setAttribute("mensajeError", "ERROR, no es posible eliminar el Cliente");
@@ -426,68 +636,194 @@ public class Controlador extends HttpServlet {
         }
 
         //MENU PRODUCTOS
-        if (menu.equals(
-                "Producto")) {
+        if (menu.equals("Producto")) {
             switch (accion) {
+                //Acción de Listar para listar la lista de productos
                 case "Listar":
-                    //List lista = pdao.listar();
                     List lista = pdao.getListaProductos();
 
                     request.setAttribute("productos", lista); //Aquí se esta definiendo productos como un atributo del arrays lista.
                     break;
 
-                case "Agregar":
+                //Acción del boton Editar para editar un Producto
+                case "Editar":
+                    // Se le asigan el parametro de id (IdProducto) a la variable "idp"
+                    idp = Integer.parseInt(request.getParameter("id"));
+
+                    // Se le asigna la acción del método "getEditarProducto" a la variable p de tipo "Producto"
+                    Producto p = pdao.getEditarProducto(idp);
+
+                    // Se establece el parámetro editarProducto en true para indicar que se está editando un producto
+                    request.setAttribute("editarProducto", true);
+
+                    // Se envían los datos del cliente al JSP
+                    request.setAttribute("producto", p);
+
+                    // Se recarga la página con la acción de "Listar".
+                    request.getRequestDispatcher("Controlador?menu=Producto&accion=Listar").forward(request, response);
+                    break;
+
+                // Acción del botón Guardar para guardar un Producto
+                case "Guardar":
+                    // Se encapsulan en variables los datos del cliente agregados en los name de cada dato.
                     String nom = request.getParameter("txtNombres");
-                    Integer pre = Integer.parseInt(request.getParameter("txtPrecio"));
-                    Integer sto = Integer.parseInt(request.getParameter("txtStock"));
+                    String pre = request.getParameter("txtPrecio");
+                    String sto = request.getParameter("txtStock");
                     String des = request.getParameter("txtDescripcion");
                     String est = request.getParameter("txtEstado");
 
+                    //Se encapsula las variables de tipo int, en variables de tipo Integer. 
+                    Integer pre_int = Integer.parseInt(pre);
+                    Integer sto_int = Integer.parseInt(sto);
+
+                    // Se le asigan al objeto pr (Producto) los datos ingresados por el usuario
                     pr.setNom(nom);
-                    pr.setPrecio(pre);
-                    pr.setStock(sto);
+                    pr.setPrecio(pre_int);
+                    pr.setStock(sto_int);
                     pr.setDescripcion(des);
                     pr.setEstado(est);
 
-                    //pdao.agregar(pr);
-                    pdao.guardarProducto(pr);
+                    // Validar si hay campos vacíos antes de guardar. (Se utiliza el metodo Integer.toString() para pasar las variables pre y sto (de tipo Integer) a String)
+                    //if (nom.isEmpty() || Integer.toString(pre_int).isEmpty() || Integer.toString(sto_int).isEmpty() || des.isEmpty() || est.isEmpty()) {
+                    if (nom.isEmpty() || (pre == null || pre.isEmpty()) || (sto == null || sto.isEmpty()) || des.isEmpty() || est.isEmpty()) {
+                        // Si hay campos vacíos, mostrar un mensaje de error al usuario.
+                        request.setAttribute("mensajeError", "ERROR, Se deben diligenciar todos los datos del Producto para guardarlo.");
 
+                        // Se guarda el objeto pr (Producto) en el atributo "producto" para mantener los datos ingreados en el formulario si hay un error
+                        request.setAttribute("productos", pr);
+
+                        // Se recarga la página con la acción de "Listar".
+                        request.getRequestDispatcher("Controlador?menu=Producto&accion=Listar").forward(request, response);
+                        return;
+                    }
+
+                    // Validar el Precio ingresado. (Se utiliza el metodo Integer.toString() para pasar la variable precio a String)
+                    if (Integer.toString(pre_int).length() > 10) {
+                        // Mostrar mensaje de error: "El precio introducido no es válido."
+                        request.setAttribute("mensajeErrorPrecio", "El precio debe ser menor o igual a 10 digitos.");
+
+                        // Mostrar mensaje de error general
+                        request.setAttribute("mensajeError", "Precio erróneo. Por favor ingrese un precio válido");
+
+                        // Se guarda el objeto pr (Producto) en el atributo "producto" para mantener los datos ingreados en el formulario si hay un error
+                        request.setAttribute("producto", pr);
+
+                        // Se recarga la página con la acción de "Listar".
+                        request.getRequestDispatcher("Controlador?menu=Producto&accion=Listar").forward(request, response);
+                        return;
+                    }
+
+                    // Validar el Stock ingresado. (Se utiliza el metodo Integer.toString() para pasar la variable stock a String)
+                    if (Integer.toString(sto_int).length() > 5) {
+                        // Mensaje error para el campo de Stock
+                        request.setAttribute("mensajeErrorStock", "El Stock debe ser menor a 99999");
+
+                        // Mensaje de error en la interfaz por Stock erróneo
+                        request.setAttribute("mensajeError", "Stock erróneo. Por favor ingrese una cantidad de Stock válido.");
+
+                        // Se guarda el objeto pr (Producto) en el atributo "producto" para mantener los datos ingreados en el formulario si hay un error
+                        request.setAttribute("producto", pr);
+
+                        // Se recarga la página con la acción de "Listar".
+                        request.getRequestDispatcher("Controlador?menu=Producto&accion=Listar").forward(request, response);
+                        return;
+                    }
+
+                    // Validar el Estado ingresado
+                    if (!est.equals("1") && !est.equals("2")) {
+                        // Si el estado no es 1 ni 2, se muestra un mensaje de error en el campo de estado
+                        request.setAttribute("mensajeErrorEstado", "Hay un ERROR en el Estado");
+
+                        // Mensaje de error en la interfaz por Estado erróneo
+                        request.setAttribute("mensajeError", "El estado debe ser 1 (Producto activo) o 2 (Producto inactivo).");
+
+                        // Se guarda el objeto pr (Producto) en el atributo "producto" para mantener los datos ingreados en el formulario si hay un error
+                        request.setAttribute("producto", pr);
+
+                        // Se recarga la página con la acción de "Listar".
+                        request.getRequestDispatcher("Controlador?menu=Producto&accion=Listar").forward(request, response);
+                        return;
+                    }
+
+                    // Si no hay errores, se procede a guardar el Producto
+                    if (request.getAttribute("mensajeError") == null) {
+
+                        //Se guarda el producto con el metodo guardarProducto
+                        pdao.guardarProducto(pr);
+
+                        // Si se guarda el Producto de forma correcta se envía un mensaje de éxito.
+                        request.setAttribute("mensajeCorrecto", "¡Se ha guardado el Producto con éxito!");
+
+                        // Guardado exitosa, se redireccionar a la página de listado de clientes
+                        request.getRequestDispatcher("Controlador?menu=Producto&accion=Listar").forward(request, response);
+                        return; //Se retorna para salir del metodo de guardar 
+                    }
+
+                    // Se recarga la página con la acción de "Listar".
                     request.getRequestDispatcher("Controlador?menu=Producto&accion=Listar").forward(request, response);
                     break;
 
-                case "Editar":
-                    idp = Integer.parseInt(request.getParameter("id"));
-
-                    //Producto p = pdao.listarId(idp);
-                    Producto p = pdao.getProductoPorId(idp);
-
-                    request.setAttribute("producto", p);
-                    request.getRequestDispatcher("Controlador?menu=Producto&accion=Listar").forward(request, response);
-                    break;
-
-                case "Actualizar":
+                case "cancelarGuardado":
+                    // Se atrapan los campos del formulario en varibales
                     String nom1 = request.getParameter("txtNombres");
                     String pre1 = request.getParameter("txtPrecio");
                     String sto1 = request.getParameter("txtStock");
                     String des1 = request.getParameter("txtDescripcion");
                     String est1 = request.getParameter("txtEstado");
 
-                    Integer precio1 = Integer.parseInt(pre1);
-                    Integer stock1 = Integer.parseInt(sto1);
+                    //Integer precio1 = Integer.parseInt(pre1);
+                    //Integer stock1 = Integer.parseInt(sto1);
+                    // Se verifica si los campos del formulario están vacíos
+                    //if (nom1.isEmpty() || Integer.toString(precio1).isEmpty() || Integer.toString(stock1).isEmpty() || des1.isEmpty() || est1.isEmpty()) {
+                    if (nom1.isEmpty() || (pre1 == null || pre1.isEmpty()) || (sto1 == null || sto1.isEmpty()) || des1.isEmpty() || est1.isEmpty()) {
+                        //En caso que los campos esten vacios se arroja un mensaje
+                        request.setAttribute("mensajeCancelar", "¡Inicia a llenar los datos del producto para cancelar el guardado!");
 
-                    pr.setNom(nom1);
-                    pr.setPrecio(precio1);
-                    pr.setStock(stock1);
-                    pr.setDescripcion(des1);
-                    pr.setEstado(est1);
+                        // Se recarga la pagina con la acción de "Listar".
+                        request.getRequestDispatcher("Controlador?menu=Producto&accion=Listar").forward(request, response);
+
+                    } else {
+                        // Se crea una varibale para que almacene una lista vacia
+                        List<Producto> productoVacioParaGuardado = new ArrayList<>();
+
+                        // Se le asigna la lista vacía al atributo "productos".
+                        request.setAttribute("productos", productoVacioParaGuardado);
+
+                        // Mensaje de exito al cancelar una edición 
+                        request.setAttribute("mensajeCancelar", "¡Se CANCELO el guardado del producto!");
+
+                        // Se recarga la pagina con la acción de "Listar".
+                        request.getRequestDispatcher("Controlador?menu=Producto&accion=Listar").forward(request, response);
+
+                    }
+
+                    // Se recarga la pagina con la acción de "Listar".
+                    request.getRequestDispatcher("Controlador?menu=Producto&accion=Listar").forward(request, response);
+                    break;
+
+                case "Actualizar":
+                    String nom2 = request.getParameter("txtNombres");
+                    String pre2 = request.getParameter("txtPrecio");
+                    String sto2 = request.getParameter("txtStock");
+                    String des2 = request.getParameter("txtDescripcion");
+                    String est2 = request.getParameter("txtEstado");
+
+                    Integer precio2 = Integer.parseInt(pre2);
+                    Integer stock2 = Integer.parseInt(sto2);
+
+                    pr.setNom(nom2);
+                    pr.setPrecio(precio2);
+                    pr.setStock(stock2);
+                    pr.setDescripcion(des2);
+                    pr.setEstado(est2);
                     pr.setId(idp);
-                    pdao.actualizar(pr);
+                    pdao.actualizarProducto(pr);
                     request.getRequestDispatcher("Controlador?menu=Producto&accion=Listar").forward(request, response);
                     break;
 
                 case "Delete":
                     idp = Integer.parseInt(request.getParameter("id"));
-                    pdao.delete(idp);
+                    pdao.eliminarProducto(idp);
                     request.getRequestDispatcher("Controlador?menu=Producto&accion=Listar").forward(request, response);
                     break;
 
@@ -520,7 +856,7 @@ public class Controlador extends HttpServlet {
                 //Este es el boton buscar, para buscar producto en nueva venta.  
                 case "BuscarProducto":
                     int id = Integer.parseInt(request.getParameter("IDproducto"));
-                    pr = pdao.listarId(id);
+                    pr = pdao.getEditarProducto(id);
 
                     request.setAttribute("cl", cl);
                     request.setAttribute("producto", pr);

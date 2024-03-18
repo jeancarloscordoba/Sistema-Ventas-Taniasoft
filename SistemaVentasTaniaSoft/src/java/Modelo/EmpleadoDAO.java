@@ -1,12 +1,10 @@
 package Modelo;
 
-//import Modelo.Empleado;
 import Controlador.PersistanceController;
 import config.Conexion;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-//import java.util.ArrayList;
 import java.util.List;
 
 public class EmpleadoDAO {
@@ -134,32 +132,18 @@ public class EmpleadoDAO {
     }
 
     //Editar Empleado
-    public Empleado getEditarEmpleado(int id) {
-        return (Empleado) PersistanceController.buscarPorId(Empleado.class, id);
+    public Empleado getEditarEmpleado(int idEmpleado) {
+        return (Empleado) PersistanceController.buscarPorId(Empleado.class, idEmpleado);
     }
 
     //Actualizar Empleado
     public boolean actualizarEmpleado(Empleado empleado) {
         return PersistanceController.actualizar(empleado);
     }
-
-    /*public boolean actualizarEmpleado(Empleado empleado) { //Actualización con un retorno(Dio Error)
-        PersistanceController.actualizar(empleado);
-        return true;
-    }*/
-    
     
     //Eliminar Empleado
     public boolean eliminarEmpleado(int idEmpleado) {
         return PersistanceController.<Empleado>eliminarPorId(idEmpleado, Empleado.class);
     }
-
-    /*public Object eliminarEmpleado(int idEmpleado) { //ANTERIOR METODO PARA ELIMINAR
-        PersistanceController.eliminarPorId(idEmpleado, Empleado.class);
-        return true;
-    }*/
-
-    /*public void eliminarEmpleado(int idEmpleado) { //Eliminar Empleado sin retorno
-        PersistanceController.eliminarPorId(idEmpleado, Empleado.class);
-    }*/
+    
 }
